@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+
+        <service id="api_platform.metadata.resource.name_collection_factory.odata" class="ApiPlatform\Odata\Metadata\Resource\Factory\OdataResourceNameCollectionFactory" decorates="api_platform.metadata.resource.name_collection_factory" public="false">
+            <argument type="service" id="api_platform.metadata.resource.name_collection_factory.odata.inner" />
+        </service>
+
+        <service id="api_platform.metadata.resource.metadata_collection_factory.odata" class="ApiPlatform\Odata\Metadata\Resource\Factory\OdataResourceMetadataCollectionFactory" decorates="api_platform.metadata.resource.metadata_collection_factory" decoration-priority="100" public="false">
+            <argument type="service" id="api_platform.metadata.resource.metadata_collection_factory.odata.inner" />
+            <argument>%api_platform.odata.batch_endpoint.enabled%</argument>
+        </service>
+
+    </services>
+</container>

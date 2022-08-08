@@ -121,6 +121,7 @@ final class ApiPlatformExtension extends Extension implements PrependExtensionIn
         $this->registerElasticsearchConfiguration($container, $config, $loader);
         $this->registerSecurityConfiguration($container, $loader, $config);
         $this->registerMakerConfiguration($container, $config, $loader);
+        $this->registerOdataConfiguration($container, $config, $loader);
         $this->registerArgumentResolverConfiguration($container, $loader, $config);
 
         $container->registerForAutoconfiguration(FilterInterface::class)
@@ -712,6 +713,24 @@ final class ApiPlatformExtension extends Extension implements PrependExtensionIn
         }
 
         $loader->load('maker.xml');
+    }
+
+    private function registerOdataConfiguration(ContainerBuilder $container, array $config, XmlFileLoader $loader): void
+    {
+        if (!$this->isConfigEnabled($container, $config['odata'])) {
+            return;
+        }
+
+        // should we force the users to put it in the api_platform.formats configuration instead?
+        // and it adds a new link in swagger which is not usable :/
+        $formats = $container->getParameter('api_platform.formats');
+        $formats['multipart'] = ['multipart/mixed'];
+        $container->setParameter('api_platform.formats', $formats);
+
+        $container->setParameter('api_platform.odata.batch_endpoint.enabled', $this->isConfigEnabled($container, $config['odata']['batch_endpoint']));
+
+        $loader->load('metadata/odata.xml');
+        $loader->load('odata.xml');
     }
 
     private function registerArgumentResolverConfiguration(ContainerBuilder $container, XmlFileLoader $loader, array $config): void

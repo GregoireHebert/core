@@ -1,0 +1,13 @@
+This is the preamble.  It is to be ignored, though it
+is a handy place to include an explanatory note to non-MIME compliant readers.
+--abc
+GET /api/greetings HTTP/1.1
+Host: localhost:8000
+Accept: application/ld+json
+
+--abc
+
+This is implicitly typed plain ASCII text.
+It does NOT end with a linebreak.
+--abc--
+This is the epilogue. It is also to be ignored.

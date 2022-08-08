@@ -149,6 +149,7 @@ final class Configuration implements ConfigurationInterface
         $this->addElasticsearchSection($rootNode);
         $this->addOpenApiSection($rootNode);
         $this->addMakerSection($rootNode);
+        $this->addOdataSection($rootNode);
 
         $this->addExceptionToStatusSection($rootNode);
 
@@ -272,7 +273,7 @@ final class Configuration implements ConfigurationInterface
                                 })
                             ->end()
                             ->validate()
-                                ->ifTrue(static fn($v): bool => $v !== array_intersect($v, $supportedVersions))
+                                ->ifTrue(static fn ($v): bool => $v !== array_intersect($v, $supportedVersions))
                                 ->thenInvalid(sprintf('Only the versions %s are supported. Got %s.', implode(' and ', $supportedVersions), '%s'))
                             ->end()
                             ->prototype('scalar')->end()
@@ -293,7 +294,7 @@ final class Configuration implements ConfigurationInterface
                         ->variableNode('swagger_ui_extra_configuration')
                             ->defaultValue([])
                             ->validate()
-                                ->ifTrue(static fn($v): bool => false === \is_array($v))
+                                ->ifTrue(static fn ($v): bool => false === \is_array($v))
                                 ->thenInvalid('The swagger_ui_extra_configuration parameter must be an array.')
                             ->end()
                             ->info('To pass extra configuration to Swagger UI, like docExpansion or filter.')
@@ -327,7 +328,7 @@ final class Configuration implements ConfigurationInterface
                                 ->variableNode('request_options')
                                     ->defaultValue([])
                                     ->validate()
-                                        ->ifTrue(static fn($v): bool => false === \is_array($v))
+                                        ->ifTrue(static fn ($v): bool => false === \is_array($v))
                                         ->thenInvalid('The request_options parameter must be an array.')
                                     ->end()
                                     ->info('To pass options to the client charged with the request.')
@@ -445,7 +446,7 @@ final class Configuration implements ConfigurationInterface
                         ->variableNode('swagger_ui_extra_configuration')
                             ->defaultValue([])
                             ->validate()
-                                ->ifTrue(static fn($v): bool => false === \is_array($v))
+                                ->ifTrue(static fn ($v): bool => false === \is_array($v))
                                 ->thenInvalid('The swagger_ui_extra_configuration parameter must be an array.')
                             ->end()
                             ->info('To pass extra configuration to Swagger UI, like docExpansion or filter.')
@@ -552,6 +553,25 @@ final class Configuration implements ConfigurationInterface
                 ->arrayNode('maker')
                     ->{class_exists(MakerBundle::class) ? 'canBeDisabled' : 'canBeEnabled'}()
                 ->end()
+            ->end();
+    }
+
+    private function addOdataSection(ArrayNodeDefinition $rootNode): void
+    {
+        $rootNode
+            ->children()
+                ->arrayNode('odata')
+                    ->canBeEnabled()
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('batch_endpoint')
+                        ->info('Create an endpoint `/$batch` that allow grouping multiple individual requests into a single HTTP request payload')
+                        ->canBeEnabled()
+//                        ->addDefaultsIfNotSet()
+//                        ->children()
+//                            ->booleanNode('batch_endpoint_enabled')->defaultFalse()->info('Create an endpoint `/$batch` that allow grouping multiple individual requests into a single HTTP request payload')->end()
+                        ->end()
+                    ->end()
             ->end();
     }
 }
