@@ -39,12 +39,10 @@ final class PartsExtractor
     {
     }
 
-    /**
-     * @param false|resource $resource
-     */
-    public function extract(Request $request, /* resource */ $resource): \Generator
+    public function extract(Request $request): \Generator
     {
-        // PHP does not allow type hinting resources yet.
+        $resource = $request->getContent(true);
+
         if (!\is_resource($resource)) {
             throw new StreamResourceException();
         }
@@ -73,7 +71,6 @@ final class PartsExtractor
                 $previousLinePosition = ftell($resource);
                 continue;
             }
-
 
             $subPartLength = $previousLinePosition - $this->subPartOffset;
             $currentPosition = ftell($resource);

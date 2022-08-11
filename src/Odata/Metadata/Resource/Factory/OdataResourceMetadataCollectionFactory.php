@@ -99,7 +99,9 @@ HTTP
             ],
             shortName: 'odata',
             class: $resource->getClass(),
+            deserialize: false,
             validate: false,
+            serialize: false,
             name: $operationName,
             processor: OdataBatchProcessor::class,
         );

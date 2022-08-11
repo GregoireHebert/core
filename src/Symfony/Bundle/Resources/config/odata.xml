@@ -4,30 +4,18 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
     <services>
-
-        <service id="api_platform.odata.serializer.multipart.normalizer" class="ApiPlatform\Odata\Serializer\MultipartNormalizer" public="false">
-            <argument type="service" id="request_stack" />
-
-            <!-- Run before any other -->
-            <tag name="serializer.normalizer" priority="-770" />
-        </service>
-
-        <service id="api_platform.odata.serializer.multipart.encoder" class="ApiPlatform\Odata\Serializer\MultipartEncoder" public="false">
-            <argument type="service" id="request_stack" />
-            <argument type="service" id="api_platform.http.media_type_factory" />
-
-            <tag name="serializer.encoder" />
-        </service>
-
         <service id="ApiPlatform\Odata\State\OdataBatchProcessor" class="ApiPlatform\Odata\State\OdataBatchProcessor">
+            <argument type="service" id="request_stack" />
             <argument type="service" id="http_kernel" />
+            <argument type="service" id="api_platform.http.media_type_factory" />
             <tag name="api_platform.state_processor" priority="-100" />
         </service>
 
         <service id="api_platform.http.media_type_factory" class="ApiPlatform\Http\MediaTypeFactory" public="false"/>
 
-        <service id="api_platform.odata.listener.view.respond" class="ApiPlatform\Odata\EventListener\RespondListener" decorates="api_platform.listener.view.respond">
-            <argument type="service" id="api_platform.odata.listener.view.respond.inner" />
+        <service id="api_platform.odata.listener.request.deserialize" class="ApiPlatform\Odata\EventListener\DeserializeListener">
+            <!-- Run after API Platform DeserializeListener -->
+            <tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest" priority="1" />
         </service>
     </services>
 </container>

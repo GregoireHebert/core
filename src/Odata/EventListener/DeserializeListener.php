@@ -15,31 +15,26 @@ namespace ApiPlatform\Odata\EventListener;
 
 use ApiPlatform\Odata\OdataResource;
 use ApiPlatform\Util\OperationRequestInitiatorTrait;
-use Symfony\Component\HttpKernel\Event\ViewEvent;
-use ApiPlatform\Symfony\EventListener\RespondListener as BaseListener;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 
 /**
  * @author Grégoire Hébert <contact@gheb.dev>
  *
  * @experimental
  */
-class RespondListener
+final class DeserializeListener
 {
     use OperationRequestInitiatorTrait;
 
-    public function __construct(private BaseListener $respondListener)
+    public function onKernelRequest(RequestEvent $event): void
     {
-    }
-
-    public function onKernelView(ViewEvent $event): void
-    {
-        $this->respondListener->onKernelView($event);
-
         $request = $event->getRequest();
         $operation = $this->initializeOperation($request);
 
-        if ((null !== $response = $event->getResponse()) && $operation?->getClass() === OdataResource::class && null !== ($contentType = $request->attributes->get('_api_odata_content_type'))) {
-            $response->headers->set('content-type', [$contentType->getBodyAsString()]);
+        if (OdataResource::class !== $operation?->getClass()) {
+            return;
         }
+
+        $request->attributes->set('data', null);
     }
 }
