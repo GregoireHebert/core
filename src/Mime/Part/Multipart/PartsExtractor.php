@@ -58,6 +58,8 @@ final class PartsExtractor
             return;
         }
 
+        $previousLinePosition = 0;
+
         while (false !== $line = fgets($resource)) {
             // Check for boundary start.
             // There might be comment lines above it and in between.
@@ -67,26 +69,31 @@ final class PartsExtractor
             }
 
             // Is this the end of a part?
-            if ($this->checkBoundaryLoop($line)) {
-                $currentPosition = ftell($resource) ?? 0;
-                $subPartLength = $currentPosition - $this->subPartOffset;
-
-                $subPartStream = fopen('php://temp', 'rw');
-                fwrite($subPartStream, stream_get_contents($resource, $subPartLength, $this->subPartOffset));
-                rewind($subPartStream);
-
-                // Should we handle sub multipart recursively, or let the routing do its job?
-                // yield HttpMultipartSubPartsExtractor::extract($request, $subPartStream);
-                yield $subPartStream;
-
-                // If it's the last part, leave.
-                if ($this->boundaryEnded) {
-                    break;
-                }
-
-                $this->subPartOffset = $currentPosition;
-                $this->boundaryNewPart = false;
+            if (!$this->checkBoundaryLoop($line)) {
+                $previousLinePosition = ftell($resource);
+                continue;
             }
+
+
+            $subPartLength = $previousLinePosition - $this->subPartOffset;
+            $currentPosition = ftell($resource);
+
+            $subPartStream = fopen('php://temp', 'rw');
+            fwrite($subPartStream, stream_get_contents($resource, $subPartLength, $this->subPartOffset));
+            rewind($subPartStream);
+
+            // we could handle sub multipart recursively, but I chose to let the routing do its job, to allow external calls.
+            // yield HttpMultipartSubPartsExtractor::extract($request, $subPartStream);
+            yield $subPartStream;
+
+            // If it's the last part, leave.
+            if ($this->boundaryEnded) {
+                break;
+            }
+
+            fseek($resource, $currentPosition);
+            $this->subPartOffset = $currentPosition;
+            $this->boundaryNewPart = false;
         }
     }
 
