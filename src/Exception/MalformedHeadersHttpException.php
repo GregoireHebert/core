@@ -16,7 +16,7 @@ namespace ApiPlatform\Exception;
 /**
  * According to the HTTP standard, each header field is comprised of a name (e.g. Content-Type, Content-Length, etc.)
  * followed by a colon (’:’) and then its value (for instance: Content-Length: 8).
- * When we detect a request where one or more of its headers does not comply to this standard then this exception is generated.
+ * When we detect a request where one or more of its headers do not comply to this standard then this exception is generated.
  * This violation indicates that a request was specially crafted with this malformed header.
  * These types of attacks are usually aimed at fooling or harming the parsing mechanism of the server.
  *

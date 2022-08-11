@@ -50,9 +50,9 @@ final class OdataBatchProcessor implements ProcessorInterface
         foreach ((new PartsExtractor($this->mediaTypeFactory))->extract($currentRequest) as $subPart) {
             $response = $this->httpKernel->handle(
                 $this->partConverter->toRequest($subPart, $currentRequest), HttpKernelInterface::SUB_REQUEST, false
-            );
+            )->prepare($currentRequest);
 
-            $batchParts[] = new BatchPart((string) $response->prepare($currentRequest));
+            $batchParts[] = new BatchPart((string) $response);
         }
 
         $mixedPart = new MixedPart(...$batchParts);

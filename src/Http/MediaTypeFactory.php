@@ -65,7 +65,7 @@ class MediaTypeFactory implements MediaTypeFactoryInterface
         $parametersStartPosition = strpos($mediaType, ';');
         $typeAndSubType = trim($parametersStartPosition ? substr($mediaType, 0, $parametersStartPosition) : $mediaType);
 
-        if (empty(self::$mimeTypes->getExtensions($typeAndSubType))) {
+        if (0 === \count(self::$mimeTypes->getExtensions($typeAndSubType))) {
             throw new MalformedHeadersHttpException("Content Type $typeAndSubType is invalid.");
         }
 

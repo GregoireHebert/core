@@ -18,7 +18,7 @@ use ApiPlatform\Metadata\Resource\ResourceNameCollection;
 use ApiPlatform\Odata\OdataResource;
 
 /**
- * Register ResourceName for Odata Batch.
+ * Registers ResourceName for Odata Batch.
  *
  * @author Grégoire Hébert <contact@gheb.dev>
  *

@@ -29,6 +29,7 @@ final class SwaggerUiListener
         ) {
             return;
         }
+
         $request->attributes->set('_controller', 'api_platform.swagger_ui.action');
     }
 }

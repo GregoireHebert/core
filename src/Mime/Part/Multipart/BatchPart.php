@@ -24,6 +24,8 @@ use Symfony\Component\Mime\Part\AbstractPart;
  */
 final class BatchPart extends AbstractPart
 {
+    private string $body;
+
     public function __construct(string $body)
     {
         parent::__construct();

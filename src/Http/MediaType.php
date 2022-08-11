@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace ApiPlatform\Http;
 
 /**
- * Represent an HTTP Internet media types [RFC2046].
+ * Represents an HTTP Internet media type [RFC2046].
  *
  * @author Grégoire Hébert <contact@gheb.dev>
  *

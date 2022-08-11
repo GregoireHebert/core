@@ -22,7 +22,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
  *
  * @internal
  */
-class HttpParser
+class HttpRequestDecoder
 {
     private const AUTHORIZATION_REGEX = '/(?<scheme>.*) (?<value>.*)$/Ui';
     private const START_LINE_REGEX = "/(?<method>(?:HEAD|GET|POST|PATCH|PUT|DELETE|PURGE|OPTIONS|TRACE|CONNECT))\s(?<path>.+)\s(?<version>HTTP\/.+)\n/";
@@ -63,8 +63,8 @@ class HttpParser
         if (
             !$this->bodyStarted &&
             (
-                $this->isStartLine($line) ||
-                $this->isHeader($line)
+                $this->extractStartLine($line) ||
+                $this->extractHeader($line)
             )
         ) {
             // stack the start line and headers.
@@ -88,11 +88,11 @@ class HttpParser
         $this->body .= $line;
     }
 
-    private function isStartLine($line): bool
+    private function extractStartLine($line): bool
     {
         preg_match(self::START_LINE_REGEX, $line, $matches, \PREG_UNMATCHED_AS_NULL);
 
-        if (!empty($matches)) {
+        if (0 !== \count($matches)) {
             $this->server['REQUEST_METHOD'] = $matches['method'];
             $this->server['REQUEST_URI'] = $matches['path'];
             $this->server['SERVER_PROTOCOL'] = $matches['version'];
@@ -110,17 +110,17 @@ class HttpParser
     private function isEmptyLine($line): bool
     {
         if (!$this->bodyStarted) {
-            return $this->bodyStarted = "\n" === $line;
+            return "\n" === $line;
         }
 
         return true;
     }
 
-    private function isHeader($line): bool
+    private function extractHeader($line): bool
     {
         preg_match(self::HEADER_REGEX, $line, $matches, \PREG_UNMATCHED_AS_NULL);
 
-        if (!empty($matches)) {
+        if (0 !== \count($matches)) {
             $this->headers[] = $matches['header'];
 
             return true;

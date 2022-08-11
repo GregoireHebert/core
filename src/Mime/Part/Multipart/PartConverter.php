@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace ApiPlatform\Mime\Part\Multipart;
 
 use ApiPlatform\Exception\StreamResourceException;
-use ApiPlatform\Http\HttpParser;
+use ApiPlatform\Http\HttpRequestDecoder;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -36,7 +36,7 @@ final class PartConverter
             throw new StreamResourceException();
         }
 
-        $parsedHttpRequest = (new HttpParser())->parse($resource);
+        $parsedHttpRequest = (new HttpRequestDecoder())->parse($resource);
 
         $serverParameters = $fromRequest ? $fromRequest->server->all() : [];
         $request = $fromRequest ? clone $fromRequest : new Request();
