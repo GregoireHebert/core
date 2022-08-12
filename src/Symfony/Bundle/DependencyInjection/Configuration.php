@@ -561,15 +561,13 @@ final class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
                 ->arrayNode('odata')
+                    ->info('Activate partial support of Odata Protocol version 4.01 (http://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html)')
                     ->canBeEnabled()
                     ->addDefaultsIfNotSet()
                     ->children()
                         ->arrayNode('batch_endpoint')
                         ->info('Create an endpoint `/$batch` that allow grouping multiple individual requests into a single HTTP request payload')
                         ->canBeEnabled()
-//                        ->addDefaultsIfNotSet()
-//                        ->children()
-//                            ->booleanNode('batch_endpoint_enabled')->defaultFalse()->info('Create an endpoint `/$batch` that allow grouping multiple individual requests into a single HTTP request payload')->end()
                         ->end()
                     ->end()
             ->end();

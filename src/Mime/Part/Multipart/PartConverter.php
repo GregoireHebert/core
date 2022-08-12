@@ -44,7 +44,7 @@ final class PartConverter
         $request->initialize(
             $parsedHttpRequest->getQuery(),
             $parsedHttpRequest->getRequest(),
-            [],
+            ['_api_odata_subrequest' => true],
             $parsedHttpRequest->getCookies(),
             [],
             array_replace($serverParameters, $parsedHttpRequest->getServer()),
