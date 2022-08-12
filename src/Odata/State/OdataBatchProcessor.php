@@ -39,6 +39,8 @@ final class OdataBatchProcessor implements ProcessorInterface
     private Request $currentRequest;
     private MixedPart $mixedPart;
 
+    private array $entityReferences = [];
+
     /**
      * @var array<Request>
      */
@@ -57,14 +59,9 @@ final class OdataBatchProcessor implements ProcessorInterface
 
         try {
             // initialize current request parts
+            $this->entityReferences = [];
             $this->requests = [];
             $this->mixedPart = new MixedPart();
-
-            // If the service receives a batch request with an invalid set of headers it MUST return a 4xx response code
-            // and perform no further processing of the batch request.
-            foreach ((new PartsExtractor($this->mediaTypeFactory))->extract($this->currentRequest) as $subPart) {
-                $this->requests[] = $this->partConverter->toRequest($subPart, $this->currentRequest);
-            }
 
             $headers = [
                 'Content-Type' => sprintf('%s; charset=utf-8', $this->mixedPart->getPreparedHeaders()->get('Content-Type')->getBodyAsString()),
@@ -105,11 +102,41 @@ final class OdataBatchProcessor implements ProcessorInterface
 
     private function getPreparedMixedPart()
     {
-        foreach ($this->requests as $request) {
+        foreach ((new PartsExtractor($this->mediaTypeFactory))->extract($this->currentRequest) as $subPart) {
+            $request = $this->partConverter->toRequest($subPart, $this->currentRequest);
+            $request = $this->referencingNewEntities($request);
+
             $response = $this->httpKernel->handle($request, HttpKernelInterface::SUB_REQUEST, true)->prepare($this->currentRequest);
+
+            $this->storeNewEntityForReference($request);
+
             $this->mixedPart->addPart(new BatchPart((string) $response));
         }
 
         return $this->mixedPart;
+    }
+
+    private function storeNewEntityForReference(Request $request): void
+    {
+        if (
+            $request->getMethod() === 'POST' &&
+            null !== ($contentId = $request->headers->get('content-id')) &&
+            null !== ($itemIri = $request->attributes->get('_api_write_item_iri'))
+        ){
+            $this->entityReferences['$'.$contentId] = $itemIri;
+        }
+    }
+
+    /**
+     * Entities created by an Insert request can be referenced in the request URL of subsequent requests within the same change set.
+     */
+    private function referencingNewEntities(Request $request): Request
+    {
+        $server = $request->server->all();
+
+        $server['REQUEST_URI'] = str_replace(array_keys($this->entityReferences), array_values($this->entityReferences), $server['REQUEST_URI']);
+        $server['PATH_INFO'] = str_replace(array_keys($this->entityReferences), array_values($this->entityReferences), $server['REQUEST_URI']);
+
+        return $request->duplicate(null,null,null,null,null, $server);
     }
 }
