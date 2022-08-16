@@ -21,6 +21,7 @@ use ApiPlatform\Mime\Part\Multipart\MixedPart;
 use ApiPlatform\Mime\Part\Multipart\PartConverter;
 use ApiPlatform\Mime\Part\Multipart\PartsExtractor;
 use ApiPlatform\State\ProcessorInterface;
+use Symfony\Component\HttpFoundation\AcceptHeader;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -42,9 +43,12 @@ final class OdataBatchProcessor implements ProcessorInterface
     private array $entityReferences = [];
 
     /**
-     * @var array<Request>
+     * The continue-on-error preference on a batch request is used to request whether, upon encountering a request
+     * within the batch that returns an error, the service return the error for that request and continue processing
+     * additional requests within the batch (if specified with an implicit or explicit value of true),
+     * or rather stop further processing (if specified with an explicit value of false)
      */
-    private array $requests;
+    private bool $continueOnError = false;
 
     public function __construct(private RequestStack $requestStack, private HttpKernelInterface $httpKernel, private MediaTypeFactoryInterface $mediaTypeFactory)
     {
@@ -60,12 +64,14 @@ final class OdataBatchProcessor implements ProcessorInterface
         try {
             // initialize current request parts
             $this->entityReferences = [];
-            $this->requests = [];
             $this->mixedPart = new MixedPart();
+
+            $preferHeader = AcceptHeader::fromString($this->currentRequest->headers->get('Prefer'));
+            $this->continueOnError = $preferHeader->has('continue-on-error') || $preferHeader->has('odata.continue-on-error');
 
             $headers = [
                 'Content-Type' => sprintf('%s; charset=utf-8', $this->mixedPart->getPreparedHeaders()->get('Content-Type')->getBodyAsString()),
-                'Vary' => 'Accept',
+                'Vary' => 'Accept, Prefer',
                 'X-Content-Type-Options' => 'nosniff',
                 'X-Frame-Options' => 'deny',
             ];
@@ -100,13 +106,13 @@ final class OdataBatchProcessor implements ProcessorInterface
         flush();
     }
 
-    private function getPreparedMixedPart()
+    private function getPreparedMixedPart(): MixedPart
     {
         foreach ((new PartsExtractor($this->mediaTypeFactory))->extract($this->currentRequest) as $subPart) {
             $request = $this->partConverter->toRequest($subPart, $this->currentRequest);
             $request = $this->referencingNewEntities($request);
 
-            $response = $this->httpKernel->handle($request, HttpKernelInterface::SUB_REQUEST, true)->prepare($this->currentRequest);
+            $response = $this->httpKernel->handle($request, HttpKernelInterface::SUB_REQUEST, $this->continueOnError)->prepare($this->currentRequest);
 
             $this->storeNewEntityForReference($request);
 
