@@ -72,29 +72,34 @@ class OdataResourceMetadataCollectionFactory implements ResourceMetadataCollecti
             openapiContext: [
                 'supportedSubmitMethods' => [],
                 'summary' => 'allow grouping multiple individual requests into a single HTTP request payload.',
-                'description' => 'allow grouping multiple individual requests into a single HTTP request payload.',
+                'description' => 'allow grouping multiple individual requests into a single HTTP request payload. see [Batch Requests](https://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_BatchRequests).\n\n*Please note that "Try it out" is not supported for this request.',
                 'requestBody' => [
-                    'description' => 'Your multipart/mixed request',
+                    'required' => true,
+                    'description' => 'Batch request',
                     'content' => [
                         'multipart/mixed;boundary=abc' => [
                             'schema' => [
                                 'type' => 'string',
                             ],
-                            'example' => <<<HTTP
---abc
-
-a bunch of text
-
---abc
-Content-Type: text/plain
-
-another batch of text
-
---abc--
-HTTP
+                            'example' => '--request-separator\nContent-Type: application/http\n\nGET Greeting HTTP/1.1\nAccept: application/ld+json\n\n\n--request-separator--'
                         ],
                     ],
-                    'required' => true,
+                ],
+                'responses' => [
+                    '200' => [
+                        'description' => 'Batch response',
+                        'content' => [
+                            'multipart/mixed' => [
+                                'schema' => [
+                                    'type' => 'string'
+                                ],
+                                'example' => '--response-separator\nContent-Type: application/http\n\nHTTP/1.1 200 OK\nContent-Type: application/ld+json\n\n{...}\n--response-separator--'
+                            ]
+                        ]
+                    ],
+                    '400' => [
+                        'description' => 'Invalid input',
+                    ],
                 ],
             ],
             shortName: 'odata',
