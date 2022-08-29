@@ -8,6 +8,7 @@
             <argument type="service" id="request_stack" />
             <argument type="service" id="http_kernel" />
             <argument type="service" id="api_platform.http.media_type_factory" />
+            <argument type="service" id="serializer" />
             <tag name="api_platform.state_processor" priority="-100" />
         </service>
 

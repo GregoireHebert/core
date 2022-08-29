@@ -66,8 +66,8 @@ class OdataResourceMetadataCollectionFactory implements ResourceMetadataCollecti
         $operationName = sprintf('_api_%s_batch', $resource->getShortName());
         $operation = new Post(
             uriTemplate: '/$batch.{_format}',
-            formats: ['multipart' => ['multipart/mixed']],
-            inputFormats: ['multipart' => ['multipart/mixed']],
+            formats: ['multipart' => ['multipart/mixed'], 'json' => ['application/json']],
+            inputFormats: ['multipart' => ['multipart/mixed'], 'json' => ['application/json']],
             status: 200,
             openapiContext: [
                 'supportedSubmitMethods' => [],
@@ -81,7 +81,7 @@ class OdataResourceMetadataCollectionFactory implements ResourceMetadataCollecti
                             'schema' => [
                                 'type' => 'string',
                             ],
-                            'example' => '--request-separator\nContent-Type: application/http\n\nGET Greeting HTTP/1.1\nAccept: application/ld+json\n\n\n--request-separator--'
+                            'example' => '--request-separator\nContent-Type: application/http\n\nGET Greeting HTTP/1.1\nAccept: application/ld+json\n\n\n--request-separator--',
                         ],
                     ],
                 ],
@@ -91,11 +91,11 @@ class OdataResourceMetadataCollectionFactory implements ResourceMetadataCollecti
                         'content' => [
                             'multipart/mixed' => [
                                 'schema' => [
-                                    'type' => 'string'
+                                    'type' => 'string',
                                 ],
-                                'example' => '--response-separator\nContent-Type: application/http\n\nHTTP/1.1 200 OK\nContent-Type: application/ld+json\n\n{...}\n--response-separator--'
-                            ]
-                        ]
+                                'example' => '--response-separator\nContent-Type: application/http\n\nHTTP/1.1 200 OK\nContent-Type: application/ld+json\n\n{...}\n--response-separator--',
+                            ],
+                        ],
                     ],
                     '400' => [
                         'description' => 'Invalid input',

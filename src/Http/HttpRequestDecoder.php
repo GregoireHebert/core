@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Http;
 
+use ApiPlatform\Exception\MissingExpectedHeaderHttpException;
+use ApiPlatform\Mime\Part\Multipart\HeaderParser;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
@@ -24,7 +26,6 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
  */
 class HttpRequestDecoder
 {
-    private const AUTHORIZATION_REGEX = '/(?<scheme>.*) (?<value>.*)$/Ui';
     private const START_LINE_REGEX = "/(?<method>(?:HEAD|GET|POST|PATCH|PUT|DELETE|PURGE|OPTIONS|TRACE|CONNECT))\s(?<path>.+)\s(?<version>HTTP\/.+)\n/";
     private const HEADER_REGEX = "/(?<header>(?:[-!#-'*+.0-9A-Z^-z|~]+:.*(?:\n){0,1})+)/";
 
@@ -131,11 +132,20 @@ class HttpRequestDecoder
 
     private function parseBody(): void
     {
-        if ('' === $this->body || 'POST' !== $this->server['REQUEST_METHOD']) {
+        if ('' === $this->body || !\in_array($this->server['REQUEST_METHOD'], ['POST', 'PUT'], true)) {
             return;
         }
 
-        if (false !== stripos($this->server['CONTENT_TYPE'], 'application/x-www-form-urlencoded')) {
+        if (null === ($this->server['CONTENT_TYPE'] ?? $this->server['HTTP_CONTENT_TYPE'] ?? null)) {
+            throw new MissingExpectedHeaderHttpException('
+                The Content-Type header was found to be empty or missing on one or more of your pages.
+                This means that the attacker is able to prepare the code that will be treated by the user’s browser as part of the web page and executed.
+                Therefore the adversaries can attack your web application by modifying the look of your web page or
+                stealing user’s data which may then lead to further Cross-Site Scripting attacks (see XSS).
+            ');
+        }
+
+        if (false !== stripos($this->server['CONTENT_TYPE'] ?? $this->server['HTTP_CONTENT_TYPE'], 'application/x-www-form-urlencoded')) {
             parse_str($this->body, $this->post);
         }
 
@@ -169,56 +179,17 @@ class HttpRequestDecoder
     {
         $headers = array_filter(array_map('trim', $this->headers));
 
+        HeaderParser::reset();
+
         foreach ($headers as $header) {
             [$name, $value] = explode(':', $header, 2);
 
-            $name = strtolower(trim($name));
-            $value = trim($value);
-
-            $normalizedName = strtoupper(str_replace('-', '_', $name));
-
-            switch ($name) {
-                case 'content-type':
-                case 'content-disposition':
-                    // CONTENT_TYPE is set with and without HTTP_ prefix
-                    $this->server[$normalizedName] = trim($value);
-                    break;
-                case 'content-length':
-                    // CONTENT_LENGTH is set with and without HTTP_ prefix
-                    $this->server[$normalizedName] = $value;
-                    break;
-                case 'authorization':
-                    preg_match(self::AUTHORIZATION_REGEX, $value, $matches);
-                    $scheme = strtolower($matches['scheme']);
-
-                    switch ($scheme) {
-                        case 'basic':
-                            [$user, $password] = explode(':', base64_decode($matches['value'], true), 2);
-                            $this->server['PHP_AUTH_USER'] = $user;
-                            $this->server['PHP_AUTH_PW'] = $password;
-                            break;
-                        case 'digest':
-                            $this->server['PHP_AUTH_DIGEST'] = $matches['value'];
-                            break;
-                        default:
-                            throw new \RuntimeException(sprintf('"%s" authorization scheme not implemented', $scheme));
-                    }
-                    break;
-                case 'cookie':
-                    $this->parseCookie($value);
-                    break;
-            }
-
-            $this->server['HTTP_'.$normalizedName] = $value;
+            HeaderParser::parse($name, $value);
         }
-    }
 
-    private function parseCookie(string $value): void
-    {
-        foreach (explode(';', $value) as $cookie) {
-            [$name, $value] = explode('=', $cookie, 2);
-            $this->cookies[str_replace(' ', '_', urldecode(trim($name)))] = urldecode(trim($value));
-        }
+        $parsedHeaders = HeaderParser::getParsedHeaders();
+        $this->server += $parsedHeaders['server'];
+        $this->cookies += $parsedHeaders['cookies'];
     }
 
     public function getHeaders(): array

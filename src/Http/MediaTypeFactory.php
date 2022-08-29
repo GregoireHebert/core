@@ -63,37 +63,39 @@ class MediaTypeFactory implements MediaTypeFactoryInterface
         }
 
         $parametersStartPosition = strpos($mediaType, ';');
-        $typeAndSubType = trim($parametersStartPosition ? substr($mediaType, 0, $parametersStartPosition) : $mediaType);
+        $typeAndSubType = trim(false !== $parametersStartPosition ? substr($mediaType, 0, $parametersStartPosition) : $mediaType);
 
         if (0 === \count(self::$mimeTypes->getExtensions($typeAndSubType))) {
             throw new MalformedHeadersHttpException("Content Type $typeAndSubType is invalid.");
         }
 
         [$type, $subType] = explode('/', $typeAndSubType);
-        $parametersString = trim(substr($mediaType, $parametersStartPosition + 1));
-
         $parameters = [];
 
-        foreach (explode(';', $parametersString) as $parameter) {
-            if (!str_contains($parameter, '=')) {
-                throw new MalformedHeadersHttpException('ContentType parameter malformed: keypair `=` separator not found.');
-            }
+        if (false !== $parametersStartPosition) {
+            $parametersString = trim(substr($mediaType, $parametersStartPosition + 1));
 
-            [$name, $value] = explode('=', trim($parameter));
+            foreach (explode(';', $parametersString) as $parameter) {
+                if (!str_contains($parameter, '=')) {
+                    throw new MalformedHeadersHttpException('ContentType parameter malformed: keypair `=` separator not found.');
+                }
 
-            $name = strtolower(trim($name));
+                [$name, $value] = explode('=', trim($parameter));
 
-            // unrecognized parameters must be ignored
-            if (null !== ContentTypeParameter::tryFrom($name)) {
-                $parameters[$name] = $value;
+                $name = strtolower(trim($name));
+
+                // unrecognized parameters must be ignored
+                if (null !== ContentTypeParameter::tryFrom($name)) {
+                    $parameters[$name] = $value;
+                }
             }
         }
 
         return new MediaType(
             $mediaType,
+            $typeAndSubType,
             $type,
             $subType,
-            $typeAndSubType,
             $parameters
         );
     }

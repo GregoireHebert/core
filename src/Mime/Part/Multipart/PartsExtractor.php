@@ -25,7 +25,7 @@ use Symfony\Component\HttpFoundation\Request;
  *
  * @internal
  */
-final class PartsExtractor
+final class PartsExtractor implements PartsExtractorInterface
 {
     private ?MediaType $mediaType = null;
 
@@ -41,13 +41,13 @@ final class PartsExtractor
 
     public function extract(Request $request): \Generator
     {
+        $this->mediaType = $this->mediaTypeFactory->getMediaType($request, 'CONTENT_TYPE');
+
         $resource = $request->getContent(true);
 
         if (!\is_resource($resource)) {
             throw new StreamResourceException();
         }
-
-        $this->mediaType = $this->mediaTypeFactory->getMediaType($request, 'CONTENT_TYPE');
 
         // if there isn't any boundary, just return the $resource.
         if (null === $this->mediaType->getParameter('boundary')) {
