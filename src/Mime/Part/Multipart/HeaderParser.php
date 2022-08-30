@@ -30,6 +30,8 @@ final class HeaderParser
         $normalizedName = strtoupper(str_replace('-', '_', $name));
         $value = trim($value);
 
+        // TODO values can be coma separated
+
         switch ($normalizedName) {
             case 'CONTENT_TYPE':
             case 'CONTENT_DISPOSITION':
