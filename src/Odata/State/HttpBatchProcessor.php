@@ -120,6 +120,10 @@ class HttpBatchProcessor implements ProcessorInterface
             foreach ((new PartsExtractor($this->mediaTypeFactory))->extract($this->currentRequest) as $subPart) {
                 $request = $this->partConverter->toRequest($subPart, $this->currentRequest);
 
+                // TODO Each body part that represents a single request MUST NOT include:
+                //    authentication or authorization related HTTP headers
+                //    Expect, From, Max-Forwards, Range, or TE headers
+
                 $request = $this->referencingNewEntities($request);
 
                 $response = $this->httpKernel->handle($request, HttpKernelInterface::SUB_REQUEST, $this->continueOnError)->prepare($this->currentRequest);

@@ -37,7 +37,7 @@ final /* readonly */ class Request
         private readonly string $method, // is a string that MUST contain one of the literals delete, get, patch, post, or put
         private readonly string $url, // is a string containing the individual request URL
         private readonly array $dependsOn = [], // array of strings whose values MUST be values of either id or atomicityGroup (not supported yet) of preceding request objects; forward references are not allowed.
-//        public readonly string $atomicityGroup,
+//        public readonly string $atomicityGroup, // TODO allow atomicity group check incidence with continue-on-error
 //        public readonly string $if,
         private readonly array $headers = [], // is an object whose name/value pairs represent request headers. it MUST contain a name/value pair with the name content-type whose value is the media type
         private readonly null|string|array $body = null // can be null, which is equivalent to not specifying the body name/value pair.
@@ -95,6 +95,11 @@ final /* readonly */ class Request
         }
 
         $parsedHeaders = HeaderParser::getParsedHeaders();
+
+        // TODO Each body part that represents a single request MUST NOT include:
+        //    authentication or authorization related HTTP headers
+        //    Expect, From, Max-Forwards, Range, or TE headers
+
         $this->server['HTTP_CONTENT_ID'] = $this->id;
         $this->server['REQUEST_METHOD'] = $this->method;
         $this->server['REQUEST_URI'] = $this->url;

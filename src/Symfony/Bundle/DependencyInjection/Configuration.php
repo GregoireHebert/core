@@ -558,6 +558,8 @@ final class Configuration implements ConfigurationInterface
 
     private function addOdataSection(ArrayNodeDefinition $rootNode): void
     {
+        // TODO add Operation options (mostly security, uri template)
+
         $rootNode
             ->children()
                 ->arrayNode('odata')
