@@ -44,11 +44,14 @@ class Response
         return '' !== ($content = trim($response->getContent() ?: '')) ? $content : null;
     }
 
+    /**
+     * Because we are in JSON, we cannot stack headers like set-cookie, so we cumulate them with a coma.
+     * @see https://datatracker.ietf.org/doc/rfc9110/ section 5.2
+     */
     private static function prepareHeaders(\Symfony\Component\HttpFoundation\Response $response): array
     {
-        // Because we are in JSON, we cannot stack headers like set-cookie
         $headers = $response->headers->all();
-        array_walk($headers, static fn (&$header) => $header = $header[0]);
+        array_walk($headers, static fn (&$header) => $header = implode(', ', $header));
 
         return $headers;
     }
