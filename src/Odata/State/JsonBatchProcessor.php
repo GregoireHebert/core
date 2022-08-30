@@ -73,6 +73,7 @@ class JsonBatchProcessor implements ProcessorInterface
         }
 
         try {
+            // json Batch Processor cannot contain batch requests itself.
             if ($this->currentRequest->attributes->get('_api_odata_subrequest', false)) {
                 throw new BadRequestHttpException();
             }
@@ -113,15 +114,15 @@ class JsonBatchProcessor implements ProcessorInterface
 
             $request = $this->partConverter->toRequest($subPart, $this->currentRequest);
 
-            if (!$subPart instanceof Request) {
+            if (!$request instanceof Request) {
                 throw new InvalidOdataIndividualRequestException();
             }
 
-            $subPart = $this->referencingNewEntities($subPart);
+            $request = $this->referencingNewEntities($request);
 
-            $response = $this->httpKernel->handle($subPart, HttpKernelInterface::SUB_REQUEST, $this->continueOnError)->prepare($this->currentRequest);
+            $response = $this->httpKernel->handle($request, HttpKernelInterface::SUB_REQUEST, $this->continueOnError)->prepare($this->currentRequest);
 
-            $this->storeNewEntityForReference($subPart);
+            $this->storeNewEntityForReference($request);
 
             $responses[] = Response::createFromResponse($request->headers->get('Content-Id'), $response);
         }
