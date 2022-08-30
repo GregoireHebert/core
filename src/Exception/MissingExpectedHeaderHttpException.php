@@ -16,9 +16,11 @@ namespace ApiPlatform\Exception;
 /**
  * A Header as been found missing and can be a security issue.
  *
+ * @author Grégoire Hébert <contact@gheb.dev>
+ *
  * @experimental
  *
- * @author Grégoire Hébert <contact@gheb.dev>
+ * @internal
  */
 class MissingExpectedHeaderHttpException extends \RuntimeException implements ExceptionInterface
 {

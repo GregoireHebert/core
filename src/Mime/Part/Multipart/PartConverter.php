@@ -18,6 +18,8 @@ use ApiPlatform\Http\HttpRequestDecoder;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
+ * Convert an HTTP Request resource into a Symfony Http-Foundation/Request.
+ *
  * @author Grégoire Hébert <contact@gheb.dev>
  *
  * @experimental
@@ -47,7 +49,7 @@ final class PartConverter
             ['_api_odata_subrequest' => true],
             $parsedHttpRequest->getCookies(),
             [],
-            dump(array_replace($serverParameters, $parsedHttpRequest->getServer())),
+            array_replace($serverParameters, $parsedHttpRequest->getServer()),
             $parsedHttpRequest->getBody()
         );
 

@@ -36,12 +36,17 @@ final /* readonly */ class Request
         private readonly string $id, // name/value pair corresponds to the Content-ID header in the multipart batch
         private readonly string $method, // is a string that MUST contain one of the literals delete, get, patch, post, or put
         private readonly string $url, // is a string containing the individual request URL
+        private readonly array $dependsOn = [], // array of strings whose values MUST be values of either id or atomicityGroup (not supported yet) of preceding request objects; forward references are not allowed.
 //        public readonly string $atomicityGroup,
-//        public readonly string $dependsOn,
 //        public readonly string $if,
-        private readonly array $headers, // is an object whose name/value pairs represent request headers. it MUST contain a name/value pair with the name content-type whose value is the media type
-        private readonly null|string|array $body // can be null, which is equivalent to not specifying the body name/value pair.
+        private readonly array $headers = [], // is an object whose name/value pairs represent request headers. it MUST contain a name/value pair with the name content-type whose value is the media type
+        private readonly null|string|array $body = null // can be null, which is equivalent to not specifying the body name/value pair.
     ) {
+    }
+
+    public function getDependsOn(): array
+    {
+        return $this->dependsOn;
     }
 
     public function getQuery(): array

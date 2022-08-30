@@ -24,5 +24,5 @@ use Symfony\Component\HttpFoundation\Request;
  */
 interface PartsExtractorInterface
 {
-    public function extract(Request $request): \Generator;
+    public function extract(Request $request): iterable;
 }

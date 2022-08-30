@@ -22,7 +22,7 @@ namespace ApiPlatform\Odata\Batch\Json;
  *
  * @internal
  */
-final /* readonly */ class BatchRequest
+final /* readonly */ class BatchRequest implements \IteratorAggregate
 {
     /**
      * @var array<Request>
@@ -32,5 +32,10 @@ final /* readonly */ class BatchRequest
     public function __construct(Request ...$requests)
     {
         $this->requests = $requests;
+    }
+
+    public function getIterator(): \Traversable
+    {
+        return new \ArrayIterator($this->requests);
     }
 }

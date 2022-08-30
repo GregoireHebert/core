@@ -4,11 +4,23 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
     <services>
-        <service id="ApiPlatform\Odata\State\OdataBatchProcessor" class="ApiPlatform\Odata\State\OdataBatchProcessor">
+        <service id="api_platform.odata.state.http_batch_processor" class="ApiPlatform\Odata\State\HttpBatchProcessor">
             <argument type="service" id="request_stack" />
             <argument type="service" id="http_kernel" />
             <argument type="service" id="api_platform.http.media_type_factory" />
+        </service>
+
+        <service id="api_platform.odata.state.json_batch_processor" class="ApiPlatform\Odata\State\JsonBatchProcessor">
+            <argument type="service" id="request_stack" />
+            <argument type="service" id="http_kernel" />
             <argument type="service" id="serializer" />
+        </service>
+
+        <service id="ApiPlatform\Odata\State\OdataBatchProcessor" class="ApiPlatform\Odata\State\OdataBatchProcessor">
+            <argument type="service" id="request_stack" />
+            <argument type="service" id="api_platform.http.media_type_factory" />
+            <argument type="service" id="api_platform.odata.state.http_batch_processor" />
+            <argument type="service" id="api_platform.odata.state.json_batch_processor" />
             <tag name="api_platform.state_processor" priority="-100" />
         </service>
 

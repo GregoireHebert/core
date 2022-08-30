@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Exception;
 
+use Symfony\Component\HttpKernel\Exception\HttpException;
+
 /**
  * @author Grégoire Hébert <contact@gheb.dev>
  *
@@ -20,7 +22,10 @@ namespace ApiPlatform\Exception;
  *
  * @internal
  */
-class StreamResourceException extends \RuntimeException implements ExceptionInterface
+class FailedDependencyHttpException extends HttpException
 {
-    protected $message = 'Impossible to open or read the stream.';
+    public function __construct(string $message = '', \Throwable $previous = null, int $code = 0, array $headers = [])
+    {
+        parent::__construct(424, $message, $previous, $headers, $code);
+    }
 }

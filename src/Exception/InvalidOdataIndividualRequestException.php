@@ -15,6 +15,10 @@ namespace ApiPlatform\Exception;
 
 /**
  * @author Grégoire Hébert <contact@gheb.dev>
+ *
+ * @experimental
+ *
+ * @internal
  */
 class InvalidOdataIndividualRequestException extends \Exception implements ExceptionInterface
 {

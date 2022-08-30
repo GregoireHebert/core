@@ -11,16 +11,26 @@
 
 declare(strict_types=1);
 
-namespace ApiPlatform\Exception;
+namespace ApiPlatform\Odata\Batch\Json;
 
 /**
+ * Represent an Odata Batch Response in Json.
+ *
  * @author Grégoire Hébert <contact@gheb.dev>
  *
  * @experimental
  *
  * @internal
  */
-class StreamResourceException extends \RuntimeException implements ExceptionInterface
+final /* readonly */ class BatchResponse
 {
-    protected $message = 'Impossible to open or read the stream.';
+    /**
+     * @var array<Response>
+     */
+    public readonly array $responses;
+
+    public function __construct(Response ...$responses)
+    {
+        $this->responses = $responses;
+    }
 }

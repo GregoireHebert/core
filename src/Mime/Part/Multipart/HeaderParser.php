@@ -67,7 +67,7 @@ final class HeaderParser
 
     public static function getParsedHeaders(): array
     {
-        return dump(self::$parsedHeaders);
+        return self::$parsedHeaders;
     }
 
     public static function reset(): void
