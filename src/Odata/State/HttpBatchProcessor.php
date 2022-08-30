@@ -25,6 +25,7 @@ use ApiPlatform\Mime\Part\Multipart\PartsExtractor;
 use ApiPlatform\Odata\Batch\ReferenceEntitiesTrait;
 use ApiPlatform\State\ProcessorInterface;
 use Symfony\Component\HttpFoundation\AcceptHeader;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -49,6 +50,7 @@ class HttpBatchProcessor implements ProcessorInterface
     private MixedPart $mixedPart;
 
     private PartConverter $partConverter;
+    private Request $currentRequest;
 
     /**
      * The continue-on-error preference on a batch request is used to request whether, upon encountering a request
