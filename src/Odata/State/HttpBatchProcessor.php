@@ -71,6 +71,8 @@ class HttpBatchProcessor implements ProcessorInterface
             throw new BadRequestHttpException('No request found to process.');
         }
 
+        // TODO Insert multipart/http layer
+
         try {
             // initialize current request parts
             $this->entityReferences = [];

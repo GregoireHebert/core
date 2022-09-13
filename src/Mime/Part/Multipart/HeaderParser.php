@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Mime\Part\Multipart;
 
+use Symfony\Component\HttpFoundation\HeaderUtils;
+
 /**
  * @author Grégoire Hébert <contact@gheb.dev>
  *
@@ -25,13 +27,23 @@ final class HeaderParser
     private const AUTHORIZATION_REGEX = '/(?<scheme>.*) (?<value>.*)$/Ui';
     private static array $parsedHeaders = ['server' => [], 'cookies' => []];
 
-    public static function parse(string $name, string $value): void
+    public static function parse(string $name, string $headerValue): void
     {
         $normalizedName = strtoupper(str_replace('-', '_', $name));
-        $value = trim($value);
+        $headerValue = trim($headerValue);
 
-        // TODO values can be coma separated
+        if (str_contains($headerValue, ',')) {
+            // Header can be coma separated
+            foreach (HeaderUtils::split($headerValue ?? '', ',') as $value) {
+                self::doParse($normalizedName, $value);
+            }
+        } else {
+            self::doParse($normalizedName, $headerValue);
+        }
+    }
 
+    private static function doParse(string $normalizedName, string $value)
+    {
         switch ($normalizedName) {
             case 'CONTENT_TYPE':
             case 'CONTENT_DISPOSITION':
