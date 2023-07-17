@@ -15,10 +15,16 @@ namespace ApiPlatform\Tests\Serializer;
 
 use ApiPlatform\Api\IriConverterInterface;
 use ApiPlatform\Api\ResourceClassResolverInterface;
+use ApiPlatform\Api\UrlGeneratorInterface;
 use ApiPlatform\Metadata\ApiProperty;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Operations;
 use ApiPlatform\Metadata\Property\Factory\PropertyMetadataFactoryInterface;
 use ApiPlatform\Metadata\Property\Factory\PropertyNameCollectionFactoryInterface;
 use ApiPlatform\Metadata\Property\PropertyNameCollection;
+use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
+use ApiPlatform\Metadata\Resource\ResourceMetadataCollection;
 use ApiPlatform\Serializer\AbstractItemNormalizer;
 use ApiPlatform\Symfony\Security\ResourceAccessCheckerInterface;
 use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\Issue5584\DtoWithNullValue;
@@ -27,6 +33,8 @@ use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyTableInheritance;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyTableInheritanceChild;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyTableInheritanceRelated;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\NonCloneableDummy;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\PropertyCollectionIriOnly;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\PropertyCollectionIriOnlyRelation;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\RelatedDummy;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\SecuredDummy;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -38,6 +46,9 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyInfo\Type;
 use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 use Symfony\Component\Serializer\Exception\UnexpectedValueException;
+use Symfony\Component\Serializer\Mapping\AttributeMetadataInterface;
+use Symfony\Component\Serializer\Mapping\ClassMetadataInterface;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -212,6 +223,77 @@ class AbstractItemNormalizerTest extends TestCase
         ];
         $this->assertSame($expected, $normalizer->normalize($dummy, null, [
             'resources' => [],
+        ]));
+    }
+
+    public function testNormalizeCollectionPropertyAsStringOnIriOnly(): void
+    {
+        $propertyCollectionIriOnlyRelation = new PropertyCollectionIriOnlyRelation();
+        $propertyCollectionIriOnlyRelation->name = 'My Relation';
+
+        $propertyCollectionIriOnly = new PropertyCollectionIriOnly();
+        $propertyCollectionIriOnly->addPropertyCollectionIriOnlyRelation($propertyCollectionIriOnlyRelation);
+
+        $resourceRelationMetadataCollection = new ResourceMetadataCollection(PropertyCollectionIriOnlyRelation::class, [
+            (new ApiResource())->withOperations(new Operations([new GetCollection('/propertyCollectionIriOnlyRelations')]))
+        ]);
+
+        $resourceMetadataCollectionFactoryProphecy = $this->prophesize(ResourceMetadataCollectionFactoryInterface::class);
+        $resourceMetadataCollectionFactoryProphecy->create(PropertyCollectionIriOnlyRelation::class)->willReturn($resourceRelationMetadataCollection);
+
+        $propertyNameCollectionFactoryProphecy = $this->prophesize(PropertyNameCollectionFactoryInterface::class);
+        $propertyNameCollectionFactoryProphecy->create(PropertyCollectionIriOnly::class, ["normalization_groups" => null, "denormalization_groups" => null, "operation_name" => null])->willReturn(
+            new PropertyNameCollection(['propertyCollectionIriOnlyRelation'])
+        );
+
+        $propertyMetadataFactoryProphecy = $this->prophesize(PropertyMetadataFactoryInterface::class);
+        $propertyMetadataFactoryProphecy->create(PropertyCollectionIriOnly::class, 'propertyCollectionIriOnlyRelation', ["normalization_groups" => null, "denormalization_groups" => null, "operation_name" => null])->willReturn(
+            (new ApiProperty())->withReadable(true)->withIriOnly(true)->withBuiltinTypes([
+                new Type('iterable', false, null, true, new Type('int', false, null, false), new Type('object', false, PropertyCollectionIriOnlyRelation::class, false))
+            ])
+        );
+
+        $iriConverterProphecy = $this->prophesize(IriConverterInterface::class);
+        $iriConverterProphecy->getIriFromResource(PropertyCollectionIriOnlyRelation::class, UrlGeneratorInterface::ABS_PATH, new GetCollection('/propertyCollectionIriOnlyRelations'), Argument::any())->willReturn('/propertyCollectionIriOnlyRelations');
+        $iriConverterProphecy->getIriFromResource($propertyCollectionIriOnly, UrlGeneratorInterface::ABS_URL, null, Argument::any())->willReturn('/propertyCollectionIriOnly');
+
+        $propertyAccessorProphecy = $this->prophesize(PropertyAccessorInterface::class);
+        $propertyAccessorProphecy->getValue($propertyCollectionIriOnly, 'propertyCollectionIriOnlyRelation')->willReturn([$propertyCollectionIriOnlyRelation]);
+
+        $resourceClassResolverProphecy = $this->prophesize(ResourceClassResolverInterface::class);
+
+        $resourceClassResolverProphecy->isResourceClass(PropertyCollectionIriOnly::class)->willReturn(true);
+        $resourceClassResolverProphecy->getResourceClass($propertyCollectionIriOnly, null)->willReturn(PropertyCollectionIriOnly::class);
+        $resourceClassResolverProphecy->getResourceClass(null, PropertyCollectionIriOnly::class)->willReturn(PropertyCollectionIriOnly::class);
+
+        $resourceClassResolverProphecy->isResourceClass(PropertyCollectionIriOnlyRelation::class)->willReturn(true);
+        $resourceClassResolverProphecy->getResourceClass([$propertyCollectionIriOnlyRelation], null)->willReturn(PropertyCollectionIriOnlyRelation::class);
+        $resourceClassResolverProphecy->getResourceClass(null, PropertyCollectionIriOnlyRelation::class)->willReturn(PropertyCollectionIriOnlyRelation::class);
+        $resourceClassResolverProphecy->getResourceClass([$propertyCollectionIriOnlyRelation], PropertyCollectionIriOnlyRelation::class)->willReturn(PropertyCollectionIriOnlyRelation::class);
+
+        $normalizer = $this->getMockForAbstractClass(AbstractItemNormalizer::class, [
+            $propertyNameCollectionFactoryProphecy->reveal(),
+            $propertyMetadataFactoryProphecy->reveal(),
+            $iriConverterProphecy->reveal(),
+            $resourceClassResolverProphecy->reveal(),
+            $propertyAccessorProphecy->reveal(),
+            null,
+            null,
+            [],
+            $resourceMetadataCollectionFactoryProphecy->reveal(),
+            null,
+        ]);
+
+        $serializerProphecy = $this->prophesize(SerializerInterface::class);
+        $serializerProphecy->willImplement(NormalizerInterface::class);
+        $normalizer->setSerializer($serializerProphecy->reveal());
+
+        $expected = [
+            'propertyCollectionIriOnlyRelation' => '/propertyCollectionIriOnlyRelations',
+        ];
+        $this->assertSame($expected, $normalizer->normalize($propertyCollectionIriOnly, null, [
+            'resources' => [],
+            'root_operation' => new GetCollection('/propertyCollectionIriOnlyRelations')
         ]));
     }
 

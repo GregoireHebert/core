@@ -56,3 +56,37 @@ Feature: JSON-LD using iri_only parameter
           "hydra:totalItems": 3
       }
       """
+
+  Scenario: Retrieve Resource with iriOnly collection Property
+    Given there are propertyCollectionIriOnly with relations
+    When I send a "GET" request to "/property_collection_iri_onlies"
+    Then the response status code should be 200
+    And the response should be in JSON
+    And the header "Content-Type" should be equal to "application/ld+json; charset=utf-8"
+    And the JSON should be valid according to this schema:
+      """
+      {
+        "hydra:member": [
+          {
+            "@id": "/property_collection_iri_onlies/1",
+            "@type": "PropertyCollectionIriOnly",
+            "propertyCollectionIriOnlyRelation": "/property_collection_iri_only_relations",
+            "iterableIri": "/property_collection_iri_only_relations"
+          },
+        ],
+      }
+      """
+    When I send a "GET" request to "/property_collection_iri_onlies/1"
+    Then the response status code should be 200
+    And the response should be in JSON
+    And the header "Content-Type" should be equal to "application/ld+json; charset=utf-8"
+    And the JSON should be valid according to this schema:
+      """
+      {
+        "@context": "/contexts/PropertyCollectionIriOnly",
+        "@id": "/property_collection_iri_onlies/1",
+        "@type": "PropertyCollectionIriOnly",
+        "propertyCollectionIriOnlyRelation": "/property_collection_iri_only_relations",
+        "iterableIri": "/property_collection_iri_only_relations"
+      }
+      """

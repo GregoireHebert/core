@@ -40,6 +40,7 @@ final class ApiProperty
      * @param string[]    $types                   the RDF types of this property
      * @param string[]    $iris
      * @param Type[]      $builtinTypes
+     * @param bool[]      $iriOnly                 Whether to return the subRessource collection IRI instead of an iterable of IRI.
      */
     public function __construct(
         private ?string $description = null,
@@ -69,7 +70,8 @@ final class ApiProperty
         private ?bool $initializable = null,
         private $iris = null,
         private ?bool $genId = null,
-        private array $extraProperties = []
+        private array $extraProperties = [],
+        private ?bool $iriOnly = null,
     ) {
         if (\is_string($types)) {
             $this->types = (array) $types;
@@ -417,6 +419,22 @@ final class ApiProperty
     {
         $metadata = clone $this;
         $metadata->genId = $genId;
+
+        return $metadata;
+    }
+
+    /**
+     * Whether to return the subRessource collection IRI instead of an iterable of IRI.
+     */
+    public function getIriOnly()
+    {
+        return $this->iriOnly;
+    }
+
+    public function withIriOnly(bool $iriOnly): self
+    {
+        $metadata = clone $this;
+        $metadata->iriOnly = $iriOnly;
 
         return $metadata;
     }
